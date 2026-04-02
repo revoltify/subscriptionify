@@ -1,0 +1,15 @@
+# Export-ignore (excluded from dist archives on Packagist)
+/.github            export-ignore
+/tests              export-ignore
+/.gitattributes     export-ignore
+/.gitignore         export-ignore
+/phpstan.neon       export-ignore
+/phpunit.xml        export-ignore
+/pint.json          export-ignore
+/rector.php         export-ignore
+/CONTRIBUTING.md    export-ignore
+/SECURITY.md        export-ignore
+
+# Auto-detect text files and normalize line endings
+* text=auto
+*.php diff=php

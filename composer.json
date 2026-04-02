@@ -1,0 +1,75 @@
+{
+    "name": "revoltify/subscriptionify",
+    "description": "Feature-based subscription management for Laravel. Like Cashier, but for plans, features & usage.",
+    "keywords": [
+        "laravel",
+        "subscription",
+        "plans",
+        "features",
+        "billing",
+        "saas",
+        "usage",
+        "metered"
+    ],
+    "homepage": "https://github.com/revoltify/subscriptionify",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Revoltify",
+            "email": "support@revoltify.net"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/revoltify/subscriptionify/issues",
+        "source": "https://github.com/revoltify/subscriptionify"
+    },
+    "require": {
+        "php": "^8.2",
+        "illuminate/support": "^11.0||^12.0||^13"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.29",
+        "orchestra/testbench": "^10.11",
+        "larastan/larastan": "^3.9.3",
+        "pestphp/pest": "^3.8.6",
+        "pestphp/pest-plugin-laravel": "^3.0",
+        "driftingly/rector-laravel": "^2.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "Revoltify\\Subscriptionify\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Revoltify\\Subscriptionify\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "phpstan": "vendor/bin/phpstan analyse --no-progress",
+        "lint": "vendor/bin/pint",
+        "refactor": "vendor/bin/rector process",
+        "test": "vendor/bin/pest",
+        "analyse": [
+            "@phpstan",
+            "@lint"
+        ]
+    },
+    "config": {
+        "process-timeout": 0,
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Revoltify\\Subscriptionify\\SubscriptionifyServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
