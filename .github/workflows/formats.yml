@@ -32,13 +32,13 @@ jobs:
           restore-keys: dependencies-php-8.2-composer-
 
       - name: Install Composer dependencies
-        run: composer update --no-interaction --prefer-dist"
+        run: composer update --no-interaction --prefer-dist
 
       - name: Check code style
-        run: vendor/bin/pint
+        run: vendor/bin/pint --test
 
       - name: Check refactor
-        run: vendor/bin/rector
+        run: vendor/bin/rector --dry-run
 
       - name: Run static analysis
-        run: vendor/bin/phpstan
+        run: vendor/bin/phpstan --no-progress

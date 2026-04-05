@@ -37,7 +37,7 @@ jobs:
           restore-keys: dependencies-php-${{ matrix.php }}-composer-
 
       - name: Install Composer dependencies
-        run: composer update --no-interaction --prefer-dist"
+        run: composer update --no-interaction --prefer-dist
 
       - name: Execute tests
         run: vendor/bin/pest
