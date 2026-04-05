@@ -32,7 +32,7 @@ final class ExpireOverdueSubscriptions extends Command
                 $count++;
             });
 
-        $this->info("Expired {$count} overdue subscription(s).");
+        $this->info(sprintf('Expired %d overdue subscription(s).', $count));
 
         return self::SUCCESS;
     }
