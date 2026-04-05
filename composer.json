@@ -1,6 +1,6 @@
 {
     "name": "revoltify/subscriptionify",
-    "description": "Feature-based subscription management for Laravel. Like Cashier, but for plans, features & usage.",
+    "description": "Feature-based subscription management for Laravel",
     "keywords": [
         "laravel",
         "subscription",
