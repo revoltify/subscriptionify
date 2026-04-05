@@ -99,7 +99,8 @@ $team->subscribe($plan);
 
 // Use features
 $team->consume('api-calls', 100);
-$team->remainingUsage('api-calls'); // 9900
+$team->remainingUsage('api-calls');   // 9900
+$team->remainingOverage('api-calls'); // extra units affordable from balance
 ```
 
 ---
@@ -342,8 +343,12 @@ $team->consume('api-calls', 100);
 // Try to consume (returns false instead of throwing)
 $team->tryConsume('api-calls', 100);
 
-// Check remaining quota
+// Check remaining plan quota
 $team->remainingUsage('api-calls');
+
+// Check remaining overage capacity (balance / unit_price)
+// Requires HasFunds + unit_price configured, returns '0' otherwise
+$team->remainingOverage('api-calls');
 
 // Check if feature has unlimited quota
 $team->isUnlimitedUsage('api-calls'); // true if unlimited
@@ -430,6 +435,23 @@ class Team extends Model implements Subscribable, HasFunds
 **Overage** kicks in when a consumable or limit feature exceeds its quota and the subscribable has both:
 1. A `unit_price` configured on the feature
 2. `HasFunds` implemented with sufficient balance
+
+### Checking remaining overage capacity
+
+Use `remainingOverage()` to check how many additional overage units a subscribable can afford based on their current balance:
+
+```php
+// Plan quota: 10,000 | Unit price: $0.001 | Balance: $50.00
+$team->remainingUsage('api-calls');   // '10000' — plan quota remaining
+$team->remainingOverage('api-calls'); // '50000' — extra units affordable (50 / 0.001)
+```
+
+Returns `'0'` when:
+- The subscribable does not implement `HasFunds`
+- The feature has no `unit_price` configured
+- The balance is zero or negative
+
+> **Note:** Since the balance is shared across all features, consuming overage on one feature reduces the overage capacity for all others. The value represents a point-in-time snapshot.
 
 ---
 

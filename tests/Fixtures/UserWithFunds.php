@@ -24,7 +24,10 @@ final class UserWithFunds extends Model implements HasFunds, Subscribable
     /** @return numeric-string */
     public function getBalance(): string
     {
-        return $this->balance;
+        /** @var numeric-string $balance */
+        $balance = (string) $this->balance;
+
+        return $balance;
     }
 
     public function hasSufficientFunds(string $amount): bool

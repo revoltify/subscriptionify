@@ -155,6 +155,28 @@ final readonly class FeatureService
         return $resolved instanceof ResolvedFeature && $resolved->isUnlimited();
     }
 
+    /** @return numeric-string */
+    public function remainingOverage(Subscribable $subscribable, string $slug): string
+    {
+        if (! $subscribable instanceof HasFunds) {
+            return '0';
+        }
+
+        $resolved = $this->resolver->resolve($subscribable, $slug);
+
+        if (! $resolved instanceof ResolvedFeature || ! $resolved->hasUnitPrice()) {
+            return '0';
+        }
+
+        $balance = $subscribable->getBalance();
+
+        if (bccomp($balance, '0', 8) <= 0) {
+            return '0';
+        }
+
+        return bcdiv($balance, $resolved->unitPrice, 0);
+    }
+
     public function usage(Subscribable $subscribable, string $slug): ?FeatureUsage
     {
         $resolved = $this->resolver->resolve($subscribable, $slug);

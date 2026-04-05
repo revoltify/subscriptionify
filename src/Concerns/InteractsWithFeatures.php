@@ -43,6 +43,12 @@ trait InteractsWithFeatures
         return $this->featureService()->remaining($this, $slug);
     }
 
+    /** @return numeric-string */
+    public function remainingOverage(string $slug): string
+    {
+        return $this->featureService()->remainingOverage($this, $slug);
+    }
+
     public function isUnlimitedUsage(string $slug): bool
     {
         return $this->featureService()->isUnlimited($this, $slug);

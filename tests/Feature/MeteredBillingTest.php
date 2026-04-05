@@ -9,6 +9,7 @@ use Revoltify\Subscriptionify\Exceptions\FeatureException;
 use Revoltify\Subscriptionify\Exceptions\InsufficientFundsException;
 use Revoltify\Subscriptionify\Models\Feature;
 use Revoltify\Subscriptionify\Models\Plan;
+use Revoltify\Subscriptionify\Tests\Fixtures\User;
 use Revoltify\Subscriptionify\Tests\Fixtures\UserWithFunds;
 
 beforeEach(function (): void {
@@ -172,4 +173,70 @@ it('period reset clears both used and overage', function (): void {
 
     expect($usage->used)->toBe('2')
         ->and($usage->overage)->toBe('0');
+});
+
+it('returns remaining overage units based on balance', function (): void {
+    $feature = Feature::query()->create(['name' => 'API Calls', 'slug' => 'api-calls', 'type' => FeatureType::Consumable]);
+    $this->plan->features()->attach($feature, ['value' => 100, 'unit_price' => '0.01000000']);
+    $this->user->subscribe($this->plan);
+
+    // balance = 100.00, unit_price = 0.01 → 100 / 0.01 = 10000 overage units
+    expect($this->user->remainingOverage('api-calls'))->toBe('10000');
+});
+
+it('remaining overage decreases after overage consumption', function (): void {
+    $feature = Feature::query()->create(['name' => 'API Calls', 'slug' => 'api-calls', 'type' => FeatureType::Consumable]);
+    $this->plan->features()->attach($feature, ['value' => 5, 'unit_price' => '1.00000000']);
+    $this->user->subscribe($this->plan);
+
+    // Consume 10 → 5 quota + 5 overage ($5 charged), balance = 95
+    $this->user->consume('api-calls', '10');
+    $this->user->refresh();
+
+    // 95 / 1.00 = 95 overage units remaining
+    expect($this->user->remainingOverage('api-calls'))->toBe('95');
+});
+
+it('returns 0 remaining overage when balance is zero', function (): void {
+    $user = UserWithFunds::query()->create([
+        'name' => 'Broke',
+        'email' => 'broke@example.com',
+        'balance' => '0.00000000',
+    ]);
+
+    $feature = Feature::query()->create(['name' => 'API Calls', 'slug' => 'api-calls', 'type' => FeatureType::Consumable]);
+    $this->plan->features()->attach($feature, ['value' => 100, 'unit_price' => '1.00000000']);
+    $user->subscribe($this->plan);
+
+    expect($user->remainingOverage('api-calls'))->toBe('0');
+});
+
+it('returns 0 remaining overage when feature has no unit price', function (): void {
+    $feature = Feature::query()->create(['name' => 'API Calls', 'slug' => 'api-calls', 'type' => FeatureType::Consumable]);
+    $this->plan->features()->attach($feature, ['value' => 100]);
+    $this->user->subscribe($this->plan);
+
+    expect($this->user->remainingOverage('api-calls'))->toBe('0');
+});
+
+it('returns 0 remaining overage for non-HasFunds subscribable', function (): void {
+    $nonFundedUser = User::query()->create([
+        'name' => 'Basic',
+        'email' => 'basic@example.com',
+    ]);
+
+    $feature = Feature::query()->create(['name' => 'API Calls', 'slug' => 'api-calls', 'type' => FeatureType::Consumable]);
+    $this->plan->features()->attach($feature, ['value' => 100, 'unit_price' => '1.00000000']);
+    $nonFundedUser->subscribe($this->plan);
+
+    expect($nonFundedUser->remainingOverage('api-calls'))->toBe('0');
+});
+
+it('returns remaining overage for metered features', function (): void {
+    $feature = Feature::query()->create(['name' => 'Compute', 'slug' => 'compute', 'type' => FeatureType::Metered]);
+    $this->plan->features()->attach($feature, ['unit_price' => '0.01000000']);
+    $this->user->subscribe($this->plan);
+
+    // balance = 100.00, unit_price = 0.01 → 10000 units
+    expect($this->user->remainingOverage('compute'))->toBe('10000');
 });
