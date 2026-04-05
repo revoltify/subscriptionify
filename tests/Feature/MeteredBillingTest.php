@@ -117,3 +117,59 @@ it('returns metered quota info with usage', function (): void {
         ->and($info->used)->toBe('50')
         ->and($info->unitPrice)->toBe('0.01000000');
 });
+
+it('overage does not inflate used column', function (): void {
+    $feature = Feature::query()->create(['name' => 'API Calls', 'slug' => 'api-calls', 'type' => FeatureType::Consumable]);
+    $this->plan->features()->attach($feature, ['value' => 5, 'unit_price' => '1.00000000']);
+    $this->user->subscribe($this->plan);
+
+    $this->user->consume('api-calls', '10');
+
+    $usage = $this->user->featureUsages()->where('feature_id', $feature->getKey())->first();
+
+    // used = 5 (plan quota only), overage = 5 (fund-charged)
+    expect($usage->used)->toBe('5')
+        ->and($usage->overage)->toBe('5');
+});
+
+it('featureInfo reflects correct values after overage', function (): void {
+    $feature = Feature::query()->create(['name' => 'API Calls', 'slug' => 'api-calls', 'type' => FeatureType::Consumable]);
+    $this->plan->features()->attach($feature, ['value' => 5, 'unit_price' => '1.00000000']);
+    $this->user->subscribe($this->plan);
+
+    $this->user->consume('api-calls', '10');
+
+    $info = $this->user->featureInfo('api-calls');
+
+    expect($info->used)->toBe('5')
+        ->and($info->overage)->toBe('5')
+        ->and($info->remaining)->toBe('0')
+        ->and($info->percentage)->toBe('100.00%');
+});
+
+it('period reset clears both used and overage', function (): void {
+    $feature = Feature::query()->create([
+        'name' => 'API Calls',
+        'slug' => 'api-calls',
+        'type' => FeatureType::Consumable,
+        'reset_period' => 1,
+        'reset_interval' => Interval::Month,
+    ]);
+    $this->plan->features()->attach($feature, ['value' => 5, 'unit_price' => '1.00000000']);
+    $this->user->subscribe($this->plan);
+
+    $this->user->consume('api-calls', '10');
+
+    // Expire the usage
+    $usage = $this->user->featureUsages()->where('feature_id', $feature->getKey())->first();
+    $usage->update(['valid_until' => now()->subDay()]);
+
+    // Consume again — should reset both used and overage
+    $this->user->load('featureUsages');
+    $this->user->consume('api-calls', '2');
+
+    $usage->refresh();
+
+    expect($usage->used)->toBe('2')
+        ->and($usage->overage)->toBe('0');
+});

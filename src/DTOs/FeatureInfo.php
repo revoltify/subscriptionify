@@ -13,6 +13,7 @@ final readonly class FeatureInfo
      * @param  numeric-string  $limit
      * @param  numeric-string  $used
      * @param  numeric-string  $remaining
+     * @param  numeric-string  $overage
      */
     public function __construct(
         public string $name,
@@ -21,6 +22,7 @@ final readonly class FeatureInfo
         public string $limit = '0',
         public string $used = '0',
         public string $remaining = '0',
+        public string $overage = '0',
         public bool $unlimited = false,
         public bool $applicable = true,
         public string $percentage = '0%',
@@ -45,11 +47,13 @@ final readonly class FeatureInfo
 
     /**
      * @param  numeric-string  $used
+     * @param  numeric-string  $overage
      */
     public static function metered(
         string $name,
         string $slug,
         string $used = '0',
+        string $overage = '0',
         ?string $unitPrice = null,
         ?string $validUntil = null,
         ?int $resetPeriod = null,
@@ -60,6 +64,7 @@ final readonly class FeatureInfo
             slug: $slug,
             type: FeatureType::Metered,
             used: $used,
+            overage: $overage,
             unlimited: true,
             validUntil: $validUntil,
             unitPrice: $unitPrice,

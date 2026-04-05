@@ -18,6 +18,7 @@ return new class extends Migration
                 $table->morphs('subscribable');
                 $table->foreignId('feature_id');
                 $table->string('used')->default('0');
+                $table->string('overage')->default('0');
                 $table->timestamp('valid_until')->nullable();
                 $table->timestamp('last_reset_at')->nullable();
                 $table->timestamps();

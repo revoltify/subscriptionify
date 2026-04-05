@@ -67,6 +67,7 @@ final readonly class FeatureInfoBuilder
             name: $resolved->name(),
             slug: $resolved->slug(),
             used: $usage?->currentUsage() ?? '0',
+            overage: $usage?->currentOverage() ?? '0',
             unitPrice: $resolved->hasUnitPrice() ? $resolved->unitPrice : null,
             validUntil: $usage?->valid_until?->toDateTimeString(),
             resetPeriod: $resolved->resetPeriod,
@@ -78,6 +79,7 @@ final readonly class FeatureInfoBuilder
     {
         $usage = $this->resolver->findUsage($subscribable, $resolved);
         $used = $usage?->currentUsage() ?? '0';
+        $overage = $usage?->currentOverage() ?? '0';
 
         if ($resolved->isUnlimited()) {
             return FeatureInfo::unlimited(
@@ -108,6 +110,7 @@ final readonly class FeatureInfoBuilder
             limit: $resolved->limit,
             used: $used,
             remaining: $remaining,
+            overage: $overage,
             unlimited: false,
             applicable: true,
             percentage: $percentage,

@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property int $subscribable_id
  * @property int $feature_id
  * @property numeric-string $used
+ * @property numeric-string $overage
  * @property Carbon|null $valid_until
  * @property Carbon|null $last_reset_at
  */
@@ -26,6 +27,7 @@ final class FeatureUsage extends Model
         'subscribable_id',
         'feature_id',
         'used',
+        'overage',
         'valid_until',
         'last_reset_at',
     ];
@@ -61,11 +63,32 @@ final class FeatureUsage extends Model
         return $this->expired() ? '0' : $this->used;
     }
 
+    /**
+     * Total units consumed (plan quota + overage units).
+     *
+     * @return numeric-string
+     */
+    public function totalUsage(): string
+    {
+        if ($this->expired()) {
+            return '0';
+        }
+
+        return bcadd($this->used, $this->overage);
+    }
+
+    /** @return numeric-string */
+    public function currentOverage(): string
+    {
+        return $this->expired() ? '0' : $this->overage;
+    }
+
     /** @return array<string, string> */
     protected function casts(): array
     {
         return [
             'used' => 'string',
+            'overage' => 'string',
             'valid_until' => 'datetime',
             'last_reset_at' => 'datetime',
         ];

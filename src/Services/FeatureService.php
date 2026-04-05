@@ -244,7 +244,10 @@ final readonly class FeatureService
             $overageUnits = bcsub($units, $remaining);
             $cost = $this->chargeOverage($subscribable, $resolved, $overageUnits);
 
-            $usage->update(['used' => bcadd($usage->used, $units)]);
+            $usage->update([
+                'used' => bcadd($usage->used, $remaining),
+                'overage' => bcadd($usage->overage, $overageUnits),
+            ]);
             $usage->refresh();
 
             return ConsumptionResult::withOverage(remaining: '0', cost: $cost);
@@ -349,6 +352,7 @@ final readonly class FeatureService
 
             if ($usage->expired()) {
                 $updateData['used'] = '0';
+                $updateData['overage'] = '0';
                 $updateData['last_reset_at'] = now();
             }
 
