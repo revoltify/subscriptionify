@@ -1,16 +1,11 @@
-name: Tests
+name: Formats
 
 on: ['push', 'pull_request']
 
 jobs:
   ci:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: true
-      matrix:
-        php: [8.5, 8.4, 8.3, 8.2]
-
-    name: Test PHP ${{ matrix.php }}
+    name: Format PHP 8.2
 
     steps:
 
@@ -20,7 +15,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php }}
+          php-version: 8.2
           extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath
           coverage: none
 
@@ -33,11 +28,17 @@ jobs:
         uses: actions/cache@v5
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
-          key: dependencies-php-${{ matrix.php }}-composer-${{ hashFiles('composer.json') }}
-          restore-keys: dependencies-php-${{ matrix.php }}-composer-
+          key: dependencies-php-8.2-composer-${{ hashFiles('composer.json') }}
+          restore-keys: dependencies-php-8.2-composer-
 
       - name: Install Composer dependencies
         run: composer update --no-interaction --prefer-dist"
 
-      - name: Execute tests
-        run: vendor/bin/pest
+      - name: Check code style
+        run: vendor/bin/pint
+
+      - name: Check refactor
+        run: vendor/bin/rector
+
+      - name: Run static analysis
+        run: vendor/bin/phpstan
