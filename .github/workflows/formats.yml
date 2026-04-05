@@ -28,8 +28,8 @@ jobs:
         uses: actions/cache@v5
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
-          key: dependencies-php-8.2-composer-${{ hashFiles('composer.json') }}
-          restore-keys: dependencies-php-8.2-composer-
+          key: format-php-8.2-composer-${{ hashFiles('composer.json') }}
+          restore-keys: format-php-8.2-composer-
 
       - name: Install Composer dependencies
         run: composer update --no-interaction --prefer-dist
