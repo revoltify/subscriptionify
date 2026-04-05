@@ -48,6 +48,8 @@ interface HasSubscription
 
     public function pastDue(): bool;
 
+    public function expired(): bool;
+
     public function valid(): bool;
 
     public function daysRemaining(): int;

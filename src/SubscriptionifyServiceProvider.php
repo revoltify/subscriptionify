@@ -6,6 +6,7 @@ namespace Revoltify\Subscriptionify;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Revoltify\Subscriptionify\Console\Commands\ExpireOverdueSubscriptions;
 use Revoltify\Subscriptionify\Http\Middleware\EnsureFeature;
 use Revoltify\Subscriptionify\Http\Middleware\EnsurePlan;
 use Revoltify\Subscriptionify\Http\Middleware\EnsureSubscribed;
@@ -32,6 +33,7 @@ final class SubscriptionifyServiceProvider extends ServiceProvider
         $this->publishConfig();
         $this->publishMigrations();
         $this->registerMiddleware();
+        $this->registerCommands();
 
         BladeDirectives::register();
     }
@@ -68,5 +70,14 @@ final class SubscriptionifyServiceProvider extends ServiceProvider
             is_string($config['feature'] ?? null) ? $config['feature'] : 'feature',
             EnsureFeature::class,
         );
+    }
+
+    private function registerCommands(): void
+    {
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                ExpireOverdueSubscriptions::class,
+            ]);
+        }
     }
 }

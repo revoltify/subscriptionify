@@ -148,6 +148,17 @@ class Subscription extends Model implements HasSubscription
         return $this->status === SubscriptionStatus::PastDue;
     }
 
+    public function expired(): bool
+    {
+        if ($this->status === SubscriptionStatus::Expired) {
+            return true;
+        }
+
+        return $this->status === SubscriptionStatus::Active
+            && $this->ends_at !== null
+            && $this->ends_at->isPast();
+    }
+
     public function valid(): bool
     {
         if ($this->active()) {
