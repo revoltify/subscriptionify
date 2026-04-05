@@ -287,6 +287,66 @@ it('can expire a subscription', function (): void {
     Event::assertDispatched(SubscriptionExpired::class);
 });
 
+it('reports expired when status is Expired', function (): void {
+    $subscription = $this->user->subscribe($this->plan);
+    $subscription->expire();
+
+    expect($subscription->expired())->toBeTrue();
+});
+
+it('reports expired when active with past ends_at', function (): void {
+    $subscription = $this->user->subscribe($this->plan);
+
+    $subscription->update(['ends_at' => now()->subDay()]);
+
+    expect($subscription->getStatus())->toBe(SubscriptionStatus::Active)
+        ->and($subscription->expired())->toBeTrue();
+});
+
+it('does not report expired when active with future ends_at', function (): void {
+    $subscription = $this->user->subscribe($this->plan);
+
+    expect($subscription->expired())->toBeFalse();
+});
+
+it('does not report expired for free plan with null ends_at', function (): void {
+    $freePlan = Plan::query()->create([
+        'name' => 'Free',
+        'slug' => 'free-expired-test',
+        'is_free' => true,
+    ]);
+
+    $subscription = $this->user->subscribe($freePlan);
+
+    expect($subscription->expired())->toBeFalse();
+});
+
+it('expires overdue subscriptions via artisan command', function (): void {
+    $subscription = $this->user->subscribe($this->plan);
+
+    // Make the subscription overdue
+    $subscription->update(['ends_at' => now()->subDay()]);
+
+    $this->artisan('subscriptionify:expire-overdue')
+        ->expectsOutputToContain('Expired 1 overdue subscription(s)')
+        ->assertSuccessful();
+
+    $subscription->refresh();
+
+    expect($subscription->getStatus())->toBe(SubscriptionStatus::Expired)
+        ->and($subscription->expired())->toBeTrue();
+
+    Event::assertDispatched(SubscriptionExpired::class);
+});
+
+it('does not expire subscriptions with future ends_at via artisan command', function (): void {
+    $this->user->subscribe($this->plan);
+
+    $this->artisan('subscriptionify:expire-overdue')
+        ->expectsOutputToContain('Expired 0 overdue subscription(s)')
+        ->assertSuccessful();
+});
+
 it('can mark subscription as past due', function (): void {
     $subscription = $this->user->subscribe($this->plan);
     $subscription->markPastDue();
