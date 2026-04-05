@@ -24,6 +24,7 @@ Feature-based subscription management for Laravel. Gateway-agnostic plans, featu
 - [Middleware](#middleware)
 - [Blade Directives](#blade-directives)
 - [Query Scopes](#query-scopes)
+- [Scheduled Commands](#scheduled-commands)
 - [Events](#events)
 - [Exceptions](#exceptions)
 - [Configuration](#configuration)
@@ -287,6 +288,7 @@ $subscription->canceled();            // has been cancelled
 $subscription->onGracePeriod();       // cancelled but still within grace period
 $subscription->ended();               // cancelled and past grace period
 $subscription->pastDue();             // marked as past due
+$subscription->expired();             // status is Expired, or Active with past ends_at
 $subscription->valid();               // active || trialing || on grace period
 $subscription->hasPlan('pro');        // on a specific plan by slug
 $subscription->daysRemaining();       // days until ends_at
@@ -595,6 +597,30 @@ Team::whereOnTrial()->get();
 // All teams with expired subscriptions
 Team::whereExpired()->get();
 ```
+
+---
+
+## Scheduled Commands
+
+Subscriptionify ships with an artisan command to automatically expire overdue subscriptions:
+
+```bash
+php artisan subscriptionify:expire-overdue
+```
+
+This finds all `Active` subscriptions whose `ends_at` date has passed and transitions them to `Expired` status, firing a `SubscriptionExpired` event for each.
+
+### Scheduling
+
+Add to your `routes/console.php`
+
+```php
+use Illuminate\Support\Facades\Schedule;
+
+Schedule::command('subscriptionify:expire-overdue')->hourly();
+```
+
+> **Tip:** The `expired()` method on a subscription also returns `true` for active subscriptions with a past `ends_at` — providing a real-time safety net between scheduler runs.
 
 ---
 
