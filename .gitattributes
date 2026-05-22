@@ -9,6 +9,7 @@
 /rector.php         export-ignore
 /CONTRIBUTING.md    export-ignore
 /SECURITY.md        export-ignore
+/README.md          export-ignore
 
 # Auto-detect text files and normalize line endings
 * text=auto
