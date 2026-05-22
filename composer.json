@@ -31,10 +31,10 @@
     "require-dev": {
         "laravel/pint": "^1.29",
         "orchestra/testbench": "^10.11",
-        "larastan/larastan": "^3.9.3",
+        "larastan/larastan": "^3.9",
         "pestphp/pest": "^3.8.6",
-        "pestphp/pest-plugin-laravel": "^3.0",
-        "driftingly/rector-laravel": "^2.2"
+        "pestphp/pest-plugin-laravel": "^3.2",
+        "driftingly/rector-laravel": "^2.3"
     },
     "autoload": {
         "psr-4": {
