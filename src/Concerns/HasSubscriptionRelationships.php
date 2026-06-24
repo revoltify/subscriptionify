@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Revoltify\Subscriptionify\Concerns;
 
-use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
@@ -47,8 +46,7 @@ trait HasSubscriptionRelationships
      * @param  Builder<static>  $query
      * @return Builder<static>
      */
-    #[Scope]
-    protected function whereSubscribed(Builder $query): Builder
+    protected function scopeWhereSubscribed(Builder $query): Builder
     {
         return $query->whereHas('subscriptions', function (Builder $q): void {
             $q->whereIn('status', [SubscriptionStatus::Active, SubscriptionStatus::Trialing]);
@@ -59,8 +57,7 @@ trait HasSubscriptionRelationships
      * @param  Builder<static>  $query
      * @return Builder<static>
      */
-    #[Scope]
-    protected function whereOnPlan(Builder $query, HasPlan $plan): Builder
+    protected function scopeWhereOnPlan(Builder $query, HasPlan $plan): Builder
     {
         return $query->whereHas('subscriptions', function (Builder $q) use ($plan): void {
             $q->where('plan_id', $plan->getKey())
@@ -72,8 +69,7 @@ trait HasSubscriptionRelationships
      * @param  Builder<static>  $query
      * @return Builder<static>
      */
-    #[Scope]
-    protected function whereOnTrial(Builder $query): Builder
+    protected function scopeWhereOnTrial(Builder $query): Builder
     {
         return $query->whereHas('subscriptions', function (Builder $q): void {
             $q->where('status', SubscriptionStatus::Trialing)
@@ -85,8 +81,7 @@ trait HasSubscriptionRelationships
      * @param  Builder<static>  $query
      * @return Builder<static>
      */
-    #[Scope]
-    protected function whereExpired(Builder $query): Builder
+    protected function scopeWhereExpired(Builder $query): Builder
     {
         return $query->whereHas('subscriptions', function (Builder $q): void {
             $q->where('status', SubscriptionStatus::Expired);
