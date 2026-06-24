@@ -29,12 +29,13 @@
         "illuminate/support": "^11.0||^12.0||^13.0"
     },
     "require-dev": {
-        "laravel/pint": "^1.29",
-        "orchestra/testbench": "^10.11",
+        "driftingly/rector-laravel": "^2.3",
         "larastan/larastan": "^3.9",
-        "pestphp/pest": "^3.8.6",
-        "pestphp/pest-plugin-laravel": "^3.2",
-        "driftingly/rector-laravel": "^2.3"
+        "laravel/pint": "^1.29",
+        "orchestra/testbench": "^10.11||11.1.0",
+        "pestphp/pest": "^3.8.6||^4.7.3",
+        "pestphp/pest-plugin-laravel": "^3.2.0||^4.1.0",
+        "pestphp/pest-plugin-type-coverage": "^3.6.1||^4.0.4"
     },
     "autoload": {
         "psr-4": {
@@ -47,13 +48,23 @@
         }
     },
     "scripts": {
-        "phpstan": "vendor/bin/phpstan analyse --no-progress",
-        "lint": "vendor/bin/pint",
-        "refactor": "vendor/bin/rector process",
-        "test": "vendor/bin/pest",
-        "analyse": [
-            "@phpstan",
-            "@lint"
+        "lint": [
+            "rector",
+            "pint --parallel"
+        ],
+        "lint:check": [
+            "pint --parallel --test",
+            "rector --dry-run"
+        ],
+        "types:check": [
+            "phpstan analyse"
+        ],
+        "test:type-coverage": "pest --type-coverage --min=100",
+        "test": [
+            "@lint:check",
+            "@types:check",
+            "@test:type-coverage",
+            "pest"
         ]
     },
     "config": {
