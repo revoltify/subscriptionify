@@ -29,11 +29,11 @@
         "illuminate/support": "^11.0||^12.0||^13.0"
     },
     "require-dev": {
-        "driftingly/rector-laravel": "^2.3",
-        "larastan/larastan": "^3.9",
-        "laravel/pint": "^1.29",
+        "driftingly/rector-laravel": "^2.5",
+        "larastan/larastan": "^3.11",
+        "laravel/pint": "^1.30.4",
         "orchestra/testbench": "^10.11||11.1.0",
-        "pestphp/pest": "^3.8.6||^4.7.3",
+        "pestphp/pest": "^3.8.7||^4.7.3",
         "pestphp/pest-plugin-laravel": "^3.2.0||^4.1.0",
         "pestphp/pest-plugin-type-coverage": "^3.6.1||^4.0.4"
     },
