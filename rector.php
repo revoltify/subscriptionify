@@ -22,7 +22,6 @@ return RectorConfig::configure()
     ->withImportNames(
         removeUnusedImports: true,
     )
-    ->withComposerBased(laravel: true)
     ->withCache(
         cacheDirectory: '/tmp/rector',
         cacheClass: FileCacheStorage::class,
