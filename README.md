@@ -372,7 +372,7 @@ $team->release('projects', 1);
 
 ## Direct Feature Grants
 
-Grant features directly to a subscribable, independent of their plan. Grants are **additive** — if a plan provides 10,000 API calls and a direct grant adds 50,000, the total quota is 60,000.
+Grant features straight to a subscribable. Grants resolve independently of plans, so they work as a top-up on an existing subscription **or as a standalone entitlement with no subscription at all**.
 
 ```php
 // Grant with quota
@@ -390,6 +390,67 @@ $team->grantFeature('api-calls', value: 0);
 // Revoke direct grant (plan quota still applies)
 $team->revokeFeature('api-calls');
 ```
+
+Where a grant overlaps a plan feature:
+
+| | Resolution |
+|---|---|
+| **Quota** | Additive — plan 10,000 + grant 50,000 = 60,000 |
+| **Unlimited** | A `value: 0` on either side wins — the feature becomes unlimited |
+| **Unit price** | Not additive — the grant's price overrides the plan's |
+| **Reset cycle** | The grant's `resetPeriod`/`resetInterval` overrides the plan's |
+
+### Entitlements without a subscription
+
+Grants carry their own quota and reset cycle, and usage is tracked per subscribable in `feature_usages`. A model can therefore hold real, self-resetting, independently-metered entitlements without ever creating a subscription — useful for child teams under a billed parent, internal accounts, or one-off comps.
+
+```php
+final class MirrorPlanFeatures
+{
+    public function handle(Team $parent, Team $child): void
+    {
+        $plan = $parent->subscription()?->getPlan();
+
+        if (! $plan) {
+            return;
+        }
+
+        foreach ($plan->features()->get() as $feature) {
+            $child->grantFeature(
+                slug: $feature->getSlug(),
+                value: (int) $feature->pivot->value,
+                unitPrice: $feature->pivot->unit_price,
+                resetPeriod: $feature->pivot->reset_period,
+                resetInterval: $feature->pivot->reset_interval,
+            );
+        }
+    }
+}
+```
+
+The child then behaves like any other subscribable, with its own counters:
+
+```php
+$child->subscribed();               // false
+$child->hasFeature('api-calls');    // true
+$child->consume('api-calls', 100);
+$child->remainingUsage('api-calls');
+$child->allFeatures();              // grants are listed
+```
+
+### What still requires a subscription
+
+Feature resolution never consults the subscription, but plan- and billing-shaped APIs do:
+
+| Available on grants alone | Requires an active subscription |
+|---|---|
+| `hasFeature()`, `canConsume()`, `consume()`, `tryConsume()`, `release()` | `subscriptionInfo()` — returns an empty DTO otherwise |
+| `remainingUsage()`, `remainingOverage()`, `isUnlimitedUsage()` | `onPlan()`, `onTrial()`, `onFreePlan()`, `canChangePlan()` |
+| `featureInfo()`, `allFeatures()` | `subscribed` and `plan` middleware |
+| `feature` middleware, `@feature` | `@subscribed`, `@plan`, `@onTrial`, `@onFreePlan` |
+| | `whereSubscribed()`, `whereOnPlan()`, `whereOnTrial()`, `whereExpired()` |
+
+If you want the full API surface without charging anyone, subscribe the model to a plan flagged `is_free` instead — `subscribe()` only writes a row, it never touches a payment gateway, and free plans get a `null` `ends_at` so they never expire.
 
 ---
 

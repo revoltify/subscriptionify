@@ -34,10 +34,38 @@ final readonly class FeatureInfoBuilder
      */
     public function buildAll(Subscribable $subscribable): Collection
     {
+        return $this->featureSlugs($subscribable)
+            ->map(function (string $slug) use ($subscribable): ?FeatureInfo {
+                $resolved = $this->resolver->resolve($subscribable, $slug);
+
+                return $resolved instanceof ResolvedFeature
+                    ? $this->build($subscribable, $resolved)
+                    : null;
+            })
+            ->filter()
+            ->values();
+    }
+
+    /**
+     * @return Collection<int, string>
+     */
+    private function featureSlugs(Subscribable $subscribable): Collection
+    {
+        return $this->planSlugs($subscribable)
+            ->merge($this->directSlugs($subscribable))
+            ->unique()
+            ->values();
+    }
+
+    /**
+     * @return Collection<int, string>
+     */
+    private function planSlugs(Subscribable $subscribable): Collection
+    {
         $subscription = $subscribable->subscription();
 
         if (! $subscription instanceof HasSubscription) {
-            /** @var Collection<int, FeatureInfo> */
+            /** @var Collection<int, string> */
             return collect();
         }
 
@@ -47,16 +75,20 @@ final readonly class FeatureInfoBuilder
         /** @var Collection<int, HasFeature> $features */
         $features = $plan->getRelation('features');
 
-        return $features
-            ->map(function (HasFeature $feature) use ($subscribable): ?FeatureInfo {
-                $resolved = $this->resolver->resolve($subscribable, $feature->getSlug());
+        return $features->map(fn (HasFeature $feature): string => $feature->getSlug())->toBase();
+    }
 
-                return $resolved instanceof ResolvedFeature
-                    ? $this->build($subscribable, $resolved)
-                    : null;
-            })
-            ->filter()
-            ->values();
+    /**
+     * @return Collection<int, string>
+     */
+    private function directSlugs(Subscribable $subscribable): Collection
+    {
+        $subscribable->loadMissing('directFeatures');
+
+        /** @var Collection<int, HasFeature> $features */
+        $features = $subscribable->getRelation('directFeatures');
+
+        return $features->map(fn (HasFeature $feature): string => $feature->getSlug())->toBase();
     }
 
     private function buildMetered(Subscribable $subscribable, ResolvedFeature $resolved): FeatureInfo

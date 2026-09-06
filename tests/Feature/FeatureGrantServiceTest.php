@@ -96,3 +96,49 @@ it('can grant feature with reset interval', function (): void {
 
     expect($this->user->directFeatures)->toHaveCount(1);
 });
+
+it('lists directly granted features not present on the plan', function (): void {
+    $planFeature = Feature::query()->create(['name' => 'API Calls', 'slug' => 'api-calls', 'type' => FeatureType::Consumable]);
+    Feature::query()->create(['name' => 'Seats', 'slug' => 'seats', 'type' => FeatureType::Consumable]);
+
+    $this->plan->features()->attach($planFeature, ['value' => 1000]);
+    $this->user->subscribe($this->plan);
+    $this->user->grantFeature('seats', value: 25);
+
+    $features = $this->user->allFeatures();
+
+    expect($features)->toHaveCount(2)
+        ->and($features->pluck('slug')->all())->toBe(['api-calls', 'seats'])
+        ->and($features->firstWhere('slug', 'seats')->limit)->toBe('25');
+});
+
+it('lists granted features without a subscription', function (): void {
+    Feature::query()->create(['name' => 'Seats', 'slug' => 'seats', 'type' => FeatureType::Consumable]);
+    Feature::query()->create(['name' => 'Branding', 'slug' => 'branding', 'type' => FeatureType::Toggle]);
+
+    $this->user->grantFeature('seats', value: 25);
+    $this->user->grantFeature('branding');
+
+    $features = $this->user->allFeatures();
+
+    expect($this->user->subscribed())->toBeFalse()
+        ->and($features)->toHaveCount(2)
+        ->and($features->pluck('slug')->all())->toBe(['seats', 'branding']);
+});
+
+it('does not duplicate a feature granted on top of the plan', function (): void {
+    $feature = Feature::query()->create(['name' => 'API Calls', 'slug' => 'api-calls', 'type' => FeatureType::Consumable]);
+
+    $this->plan->features()->attach($feature, ['value' => 1000]);
+    $this->user->subscribe($this->plan);
+    $this->user->grantFeature('api-calls', value: 500);
+
+    $features = $this->user->allFeatures();
+
+    expect($features)->toHaveCount(1)
+        ->and($features->first()->limit)->toBe('1500');
+});
+
+it('returns an empty collection with no plan or grants', function (): void {
+    expect($this->user->allFeatures())->toBeEmpty();
+});
