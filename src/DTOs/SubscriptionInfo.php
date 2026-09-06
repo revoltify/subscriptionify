@@ -42,7 +42,7 @@ final readonly class SubscriptionInfo
             trialEndsAt: null,
             onTrial: false,
             onGracePeriod: false,
-            features: new Collection(),
+            features: new Collection,
         );
     }
 
